@@ -5,14 +5,18 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.firebase.client.core.SyncTree;
+import com.firebase.client.core.view.Event;
 
 import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 
@@ -26,6 +30,8 @@ public class ChatList extends Observable{
 
   public final HashMap<String, ChatDao> objects = new HashMap<>();
   ArrayList<String> objectIds = new ArrayList<>();
+
+  public ArrayList<ChatDao> localObjects = new ArrayList<>();
 
   public boolean isMine(ChatDao item) {
     return TextUtils.equals(item.username, username);
@@ -52,6 +58,7 @@ public class ChatList extends Observable{
         if(!objectIds.contains(key)) {
           objectIds.add(key);
         }
+        DatabaseManager.instance().createOrUpdate(new OfflineObject(key, data));
         // notify data set changed
         setChanged();
         notifyObservers();
@@ -63,6 +70,7 @@ public class ChatList extends Observable{
         String key = dataSnapshot.getKey();
         ChatDao data = dataSnapshot.getValue(ChatDao.class);
         objects.put(key, data);
+        DatabaseManager.instance().createOrUpdate(new OfflineObject(key, data));
         // notify data set changed
         setChanged();
         notifyObservers();
@@ -73,6 +81,7 @@ public class ChatList extends Observable{
         String key = dataSnapshot.getKey();
         objects.remove(key);
         objectIds.remove(key);
+        DatabaseManager.instance().delete(key);
         //
         setChanged();
         notifyObservers();
@@ -88,6 +97,15 @@ public class ChatList extends Observable{
 
       }
     });
+    List<OfflineObject> _local = DatabaseManager.instance().getAll();
+    for(OfflineObject o : _local) {
+      objects.put(o.key, o);
+      objectIds.add(o.key);
+      setChanged();
+    }
+    // notify data set changed
+
+    notifyObservers();
   }
 
 
@@ -100,10 +118,36 @@ public class ChatList extends Observable{
   }
 
   public void add(String message) {
-    ChatDao obj = new ChatDao(username);
+    final ChatDao obj = new ChatDao(username);
     obj.message = message;
-    mFirebase.child(FIREBASE_PATH).push().setValue(obj);
+    obj.sentDate = System.currentTimeMillis();
+    addToFirebase(obj);
+  }
 
+  private void addToFirebase(final  ChatDao obj) {
+    mFirebase.child(FIREBASE_PATH).push().setValue(obj, new Firebase.CompletionListener(){
+      @Override
+      public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+            if(firebaseError != null) {
+              onWriteError(obj);
+            } else {
+              sendPendingObject();
+            }
+        }
+
+    });
+  }
+
+  private void sendPendingObject() {
+    while (!localObjects.isEmpty()) {
+      ChatDao obj = localObjects.remove(0);
+      addToFirebase(obj);
+    }
+
+  }
+
+  private void onWriteError(ChatDao obj) {
+    localObjects.add(obj);
   }
 
 

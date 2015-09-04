@@ -28,6 +28,7 @@ public class ChatActivity extends AppCompatActivity implements Observer, View.On
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_chat);
     Firebase.setAndroidContext(this);
+    Firebase.getDefaultConfig().setPersistenceEnabled(false);
     mListView = (ListView)findViewById(R.id.listView);
     edtMessage = (EditText) findViewById(R.id.edtMessage);
     adapter = new MessageAdapter();
