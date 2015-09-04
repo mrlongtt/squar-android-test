@@ -1,5 +1,7 @@
 package test.toannguyen.com;
 
+import com.firebase.client.Firebase;
+
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -25,6 +27,7 @@ public class ChatActivity extends AppCompatActivity implements Observer, View.On
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_chat);
+    Firebase.setAndroidContext(this);
     mListView = (ListView)findViewById(R.id.listView);
     edtMessage = (EditText) findViewById(R.id.edtMessage);
     adapter = new MessageAdapter();
