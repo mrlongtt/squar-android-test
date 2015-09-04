@@ -13,6 +13,9 @@ import test.toannguyen.com.androidtest.R;
  */
 public class MessageAdapter extends BaseAdapter {
 
+  private static final int TYPE_MINE = 0;
+  private static final int TYPE_FRIEND = 1;
+
   @Override
   public int getCount() {
     return ChatList.instance().getCount();
@@ -29,10 +32,32 @@ public class MessageAdapter extends BaseAdapter {
   }
 
   @Override
+  public int getItemViewType(int position) {
+    ChatDao item = getItem(position);
+    if(ChatList.instance().isMine(item)) {
+      return TYPE_MINE;
+    }
+    return TYPE_FRIEND;
+  }
+
+  @Override
+  public int getViewTypeCount() {
+    return 2;
+  }
+
+  public int getLayouRes(int position) {
+    if(getItemViewType(position) == TYPE_MINE)
+      return R.layout.list_item_message;
+    return R.layout.list_item_message_friend;
+
+  }
+
+  @Override
   public View getView(int position, View convertView, ViewGroup parent) {
     final ViewHolder holder;
       if(convertView == null) {
-        convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_message, parent, false);
+
+        convertView = LayoutInflater.from(parent.getContext()).inflate(getLayouRes(position), parent, false);
         holder = new ViewHolder();
         holder.txtMessage = (TextView)convertView.findViewById(R.id.txtMessage);
         convertView.setTag(holder);
@@ -42,7 +67,7 @@ public class MessageAdapter extends BaseAdapter {
 
     // update
     ChatDao item = getItem(position);
-    holder.txtMessage.setText(item.message);
+    holder.txtMessage.setText(String.format("%s: %s", item.username, item.message));
 
     return convertView;
   }
@@ -50,4 +75,5 @@ public class MessageAdapter extends BaseAdapter {
   static class ViewHolder {
     TextView txtMessage;
   }
+
 }

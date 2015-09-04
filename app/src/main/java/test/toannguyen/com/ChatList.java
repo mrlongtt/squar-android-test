@@ -27,6 +27,10 @@ public class ChatList extends Observable{
   public final HashMap<String, ChatDao> objects = new HashMap<>();
   ArrayList<String> objectIds = new ArrayList<>();
 
+  public boolean isMine(ChatDao item) {
+    return TextUtils.equals(item.username, username);
+  }
+
   ChatList() {
     mFirebase = new Firebase("https://mysquar-test.firebaseio.com");
     String android_id = Settings.Secure.getString(App.getContext().getContentResolver(),
