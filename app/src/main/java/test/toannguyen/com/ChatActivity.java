@@ -54,15 +54,19 @@ public class ChatActivity extends AppCompatActivity implements Observer, View.On
       adapter.notifyDataSetChanged();
   }
 
+  public void sendMessage() {
+    String message = edtMessage.getText().toString();
+    if(!TextUtils.isEmpty(message)) {
+      ChatList.instance().add(message);
+    }
+    edtMessage.setText("");
+  }
+
   @Override
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.btnSend:
-        String message = edtMessage.getText().toString();
-        if(!TextUtils.isEmpty(message)) {
-          ChatList.instance().add(message);
-        }
-        edtMessage.setText("");
+        sendMessage();
         break;
     }
   }

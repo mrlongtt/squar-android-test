@@ -8,11 +8,12 @@ import java.util.Date;
  */
 public class ChatDao {
   ChatDao() {
-    ModifiedDate = Calendar.getInstance().getTime();
-  }
 
-  public int Id;
+  }
+  ChatDao(String username) {
+    this.username = username;
+  }
   public String message;
-  public Date ModifiedDate;
+  public String username;
 
 }
